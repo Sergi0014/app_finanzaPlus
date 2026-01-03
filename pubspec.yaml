@@ -1,0 +1,58 @@
+name: app_ingresos
+description: Aplicación de registro de ingresos y egresos con almacenamiento local
+publish_to: "none"
+version: 2.2.4+8
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+
+  # Database
+  sqflite: ^2.3.0
+  path_provider: ^2.1.1
+  path: ^1.8.3
+
+  # State Management
+  provider: ^6.1.1
+  shared_preferences: ^2.2.2
+
+  # UI & Charts
+  fl_chart: ^0.65.0
+  intl: ^0.18.1
+
+  # File handling
+  csv: ^5.1.1
+  share_plus: ^7.2.1
+  file_picker: ^8.0.0
+
+  # Notifications
+  flutter_local_notifications: ^17.0.0
+  timezone: ^0.9.2
+
+  # Animations
+  animations: ^2.0.11
+  lottie: ^2.7.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+  mockito: ^5.4.4
+  build_runner: ^2.4.7
+  flutter_launcher_icons: ^0.13.1
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/
+    - assets/animations/
+
+flutter_launcher_icons:
+  image_path: "assets/factura.png"
+  remove_alpha_ios: true
+  android: true
+  ios: true

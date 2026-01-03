@@ -1,0 +1,186 @@
+```
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                    ARQUITECTURA DEL MÓDULO DE HÁBITOS                      ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              CAPA DE PRESENTACIÓN                            │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌──────────────────┐         ┌──────────────────────────────────────┐    │
+│  │  HabitsScreen    │────────▶│   AddEditHabitScreen                 │    │
+│  │                  │         │                                      │    │
+│  │  - Lista         │         │  - Formulario crear/editar           │    │
+│  │  - Progreso      │         │  - Selección icono/color             │    │
+│  │  - Stats         │         │  - Configuración notificaciones      │    │
+│  └────────┬─────────┘         └──────────────────────────────────────┘    │
+│           │                                                                 │
+│           ├────────────┬────────────┬────────────┐                         │
+│           ▼            ▼            ▼            ▼                         │
+│    ┌───────────┐ ┌──────────┐ ┌─────────┐ ┌──────────────┐               │
+│    │HabitCard  │ │ Progress │ │ Weekly  │ │   Dialogs    │               │
+│    │           │ │   Bar    │ │  Chart  │ │              │               │
+│    └───────────┘ └──────────┘ └─────────┘ └──────────────┘               │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    │ Consumer / Provider.of
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         CAPA DE LÓGICA DE NEGOCIO                           │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│                       ┌──────────────────────┐                             │
+│                       │   HabitProvider      │                             │
+│                       │  (ChangeNotifier)    │                             │
+│                       ├──────────────────────┤                             │
+│                       │                      │                             │
+│                       │  - habits: List      │                             │
+│                       │  - completions: List │                             │
+│                       │  - selectedDate      │                             │
+│                       │  - isLoading         │                             │
+│                       │                      │                             │
+│                       │  + loadData()        │                             │
+│                       │  + createHabit()     │                             │
+│                       │  + updateHabit()     │                             │
+│                       │  + deleteHabit()     │                             │
+│                       │  + toggleCompletion()│                             │
+│                       │  + getProgress()     │                             │
+│                       │  + getStreak()       │                             │
+│                       │                      │                             │
+│                       └──────────┬───────────┘                             │
+│                                  │                                          │
+└──────────────────────────────────┼──────────────────────────────────────────┘
+                                   │
+                                   │ Usa DatabaseHelper
+                                   ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                            CAPA DE DATOS                                    │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌──────────────────────────────────────────────────────────────────┐     │
+│  │                    DatabaseHelper                                 │     │
+│  │                    (Singleton)                                    │     │
+│  ├──────────────────────────────────────────────────────────────────┤     │
+│  │                                                                   │     │
+│  │  HABITS TABLE                    HABIT_COMPLETIONS TABLE         │     │
+│  │  ┌─────────────────┐            ┌──────────────────────┐        │     │
+│  │  │ id (PK)         │            │ id (PK)              │        │     │
+│  │  │ name            │◀───────────│ habit_id (FK)        │        │     │
+│  │  │ description     │            │ date                 │        │     │
+│  │  │ icon_name       │            │ is_completed         │        │     │
+│  │  │ color_value     │            │ notes                │        │     │
+│  │  │ is_active       │            │ created_at           │        │     │
+│  │  │ notification    │            │ updated_at           │        │     │
+│  │  │ created_at      │            │                      │        │     │
+│  │  │ updated_at      │            │ UNIQUE(habit_id,date)│        │     │
+│  │  └─────────────────┘            └──────────────────────┘        │     │
+│  │                                                                   │     │
+│  │  Métodos:                                                         │     │
+│  │  + createHabit()                 + toggleHabitCompletion()       │     │
+│  │  + getHabitById()                + getHabitCompletions()         │     │
+│  │  + getAllHabits()                + getCompletionsForDate()       │     │
+│  │  + getActiveHabits()             + getDailyProgress()            │     │
+│  │  + updateHabit()                 + getWeeklyHabitStats()         │     │
+│  │  + deleteHabit()                                                 │     │
+│  │                                                                   │     │
+│  └───────────────────────────────────────────────────────────────────┘    │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                   │
+                                   │ SQLite
+                                   ▼
+                          ┌─────────────────┐
+                          │  app_ingresos.db│
+                          │   (versión 2)   │
+                          └─────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          SERVICIOS AUXILIARES                                │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│                    ┌────────────────────────┐                              │
+│                    │  NotificationService   │                              │
+│                    ├────────────────────────┤                              │
+│                    │                        │                              │
+│                    │  + scheduleHabit       │                              │
+│                    │    Notification()      │                              │
+│                    │                        │                              │
+│                    │  + cancelHabit         │                              │
+│                    │    Notification()      │                              │
+│                    │                        │                              │
+│                    │  + showCompletion      │                              │
+│                    │    Motivation()        │                              │
+│                    │                        │                              │
+│                    └────────────────────────┘                              │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+                            FLUJO DE DATOS
+
+  Usuario toca hábito
+         │
+         ▼
+  HabitsScreen llama toggleHabitCompletion()
+         │
+         ▼
+  HabitProvider.toggleHabitCompletion()
+         │
+         ▼
+  DatabaseHelper.toggleHabitCompletion()
+         │
+         ├─── Actualiza/Inserta en habit_completions
+         │
+         ▼
+  Retorna HabitCompletionModel
+         │
+         ▼
+  HabitProvider actualiza _todayCompletions
+         │
+         ▼
+  notifyListeners()
+         │
+         ▼
+  UI se reconstruye automáticamente
+         │
+         ├─── HabitCard actualiza estado visual
+         ├─── ProgressBar recalcula porcentaje
+         └─── WeeklyChart actualiza gráfico
+
+═══════════════════════════════════════════════════════════════════════════════
+
+                        INTEGRACIÓN CON LA APP
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              main.dart                                       │
+│                                                                             │
+│  MultiProvider(                                                             │
+│    providers: [                                                             │
+│      ChangeNotifierProvider(TransactionProvider), ◀─── Existente           │
+│      ChangeNotifierProvider(HabitProvider),       ◀─── NUEVO               │
+│    ],                                                                       │
+│    child: MaterialApp(...)                                                 │
+│  )                                                                          │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                   │
+                                   ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           home_screen.dart                                   │
+│                                                                             │
+│  NavigationBar(                                                             │
+│    destinations: [                                                          │
+│      Dashboard,                                                             │
+│      Transacciones,                                                         │
+│      Hábitos,         ◀─── NUEVO                                           │
+│      Categorías,                                                            │
+│      Reportes,                                                              │
+│    ]                                                                        │
+│  )                                                                          │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════════════
+```
